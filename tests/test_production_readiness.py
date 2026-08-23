@@ -6,10 +6,12 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from copy import deepcopy
 
 from worldsmith.errors import SaveError, ValidationError
 from worldsmith.persistence import load_session, save_session
 from worldsmith.session import SESSION_VERSION, WorldSession
+from worldsmith.simulation import SAVE_VERSION, World
 
 
 class ProductionReadinessTests(unittest.TestCase):
@@ -18,10 +20,33 @@ class ProductionReadinessTests(unittest.TestCase):
         session.active.advance(250)
         payload = json.dumps(session.to_dict(), sort_keys=True, separators=(",", ":"))
 
-        self.assertEqual(len(session.active.events), 29)
+        self.assertEqual(len(session.active.events), 146)
         self.assertEqual(
             hashlib.sha256(payload.encode()).hexdigest(),
-            "913d153981dec143e07f0f26e9f34f9da359eb7663605d2653c7913ed1a9d9cf",
+            "a53d983a6e4dae03a2f417317533be7d9481e6923de9bee2856325f0195a374f",
+        )
+
+    def test_version_two_world_migrates_to_phase_seven_schema(self) -> None:
+        original = WorldSession.create("World Migration", 9).active
+        legacy = deepcopy(original.to_dict())
+        legacy["version"] = 2
+        for region in legacy["regions"].values():
+            region.pop("terrain")
+            region.pop("climate")
+            region.pop("neighbors")
+        for event in legacy["events"]:
+            event.pop("schema_version")
+        legacy["events"][0]["location_id"] = next(iter(legacy["regions"]))
+
+        migrated = World.from_dict(legacy)
+
+        self.assertEqual(migrated.to_dict()["version"], SAVE_VERSION)
+        self.assertTrue(all(region.neighbors for region in migrated.regions.values()))
+        self.assertTrue(
+            all(
+                event.location_id is None or event.location_id in migrated.settlements
+                for event in migrated.events
+            )
         )
 
     def test_invariants_and_event_references_hold_in_long_run(self) -> None:
