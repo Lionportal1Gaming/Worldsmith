@@ -235,7 +235,8 @@ class World:
             civ.population = sum(
                 settlement.population
                 for settlement in self.settlements.values()
-                if settlement.civilization_id == civ.id and settlement.status == "active"
+                if settlement.civilization_id == civ.id
+                and settlement.status == "active"
             )
             if pressure >= 3 and self.year % 11 == 0:
                 self.emit(
@@ -276,7 +277,11 @@ class World:
                     [relation.source_id, relation.target_id],
                     None,
                     relation.history[-1:],
-                    {"from": previous_status, "to": relation.status, "score": relation.score},
+                    {
+                        "from": previous_status,
+                        "to": relation.status,
+                        "score": relation.score,
+                    },
                     3,
                     f"Relations shifted from {previous_status} to {relation.status}.",
                 )
@@ -298,7 +303,10 @@ class World:
                     [relation.source_id, relation.target_id],
                     None,
                     relation.history[-1:],
-                    {"relationship": relation.score, "cause": "hostile diplomatic history"},
+                    {
+                        "relationship": relation.score,
+                        "cause": "hostile diplomatic history",
+                    },
                     5,
                     "Two civilizations declared an abstract conflict after hostile diplomacy.",
                 )
@@ -308,7 +316,10 @@ class World:
                     if rng.randint(0, 1) == 0
                     else (relation.target_id, relation.source_id)
                 )
-                winner, loser = self.civilizations[winner_id], self.civilizations[loser_id]
+                winner, loser = (
+                    self.civilizations[winner_id],
+                    self.civilizations[loser_id],
+                )
                 active = [
                     self.settlements[s]
                     for s in loser.settlement_ids
@@ -491,7 +502,10 @@ class World:
     def _religion_evolution(self, civ: Civilization, pressure: int) -> None:
         religion = self.religions[civ.religion_id]
         religion.influence_by_civilization[civ.id] = max(
-            0, min(100, religion.influence_by_civilization.get(civ.id, 100) + 1 - pressure)
+            0,
+            min(
+                100, religion.influence_by_civilization.get(civ.id, 100) + 1 - pressure
+            ),
         )
         if (pressure >= 3 or civ.stability < 35) and self.year % 11 == 0:
             religion.institution = "reform council"
@@ -594,8 +608,9 @@ class World:
                 continue
             target = max(
                 targets,
-                key=lambda settlement: settlement.resources
-                + self.regions[settlement.region_id].fertility,
+                key=lambda settlement: (
+                    settlement.resources + self.regions[settlement.region_id].fertility
+                ),
             )
             push = max(1, source.needs - source.resources // 3)
             pull = target.resources + self.regions[target.region_id].fertility
@@ -806,8 +821,14 @@ class World:
                 civ.leader_id not in self.people
                 or civ.religion_id not in self.religions
                 or not civ.settlement_ids
-                or any(settlement_id not in self.settlements for settlement_id in civ.settlement_ids)
-                or any(region_id not in self.regions for region_id in civ.territory_region_ids)
+                or any(
+                    settlement_id not in self.settlements
+                    for settlement_id in civ.settlement_ids
+                )
+                or any(
+                    region_id not in self.regions
+                    for region_id in civ.territory_region_ids
+                )
                 or civ.status not in {"active", "collapsed"}
             ):
                 raise ValidationError("invalid civilization placement")
@@ -940,11 +961,15 @@ def migrate_world(data: dict[str, Any]) -> dict[str, Any]:
         relationship.setdefault("history", [])
     for religion in migrated["religions"].values():
         religion.setdefault("institution", "shrine network")
-        religion.setdefault("influence_by_civilization", {religion["civilization_id"]: 100})
+        religion.setdefault(
+            "influence_by_civilization", {religion["civilization_id"]: 100}
+        )
         religion.setdefault("history", [])
     settlements_by_region: dict[str, list[str]] = {}
     for settlement_id, settlement in migrated["settlements"].items():
-        settlements_by_region.setdefault(settlement["region_id"], []).append(settlement_id)
+        settlements_by_region.setdefault(settlement["region_id"], []).append(
+            settlement_id
+        )
     for event in migrated["events"]:
         event.setdefault("schema_version", EVENT_SCHEMA_VERSION)
         if event.get("location_id") in migrated["regions"]:
@@ -971,12 +996,21 @@ def generate_world(
 ) -> World:
     """Generate a deterministic, validated persistent world from explicit settings."""
     if region_count < 3 or civilization_count < 1 or civilization_count > region_count:
-        raise ValidationError("generation requires 3+ regions and 1..region_count civilizations")
+        raise ValidationError(
+            "generation requires 3+ regions and 1..region_count civilizations"
+        )
     rng = Random(f"generation:{seed}")
     world = World(f"world-{name.lower().replace(' ', '-') or 'unnamed'}", seed, name)
     terrain = ("coast", "plains", "forest", "hills", "riverland", "highland")
     climate = ("temperate", "cool", "dry", "wet")
-    region_names = ("Ash Coast", "Green March", "Iron Vale", "Dawn Steppe", "Moss Reach", "Sunward Basin")
+    region_names = (
+        "Ash Coast",
+        "Green March",
+        "Iron Vale",
+        "Dawn Steppe",
+        "Moss Reach",
+        "Sunward Basin",
+    )
     for index in range(region_count):
         region = Region(
             world.entity_id("region"),
