@@ -519,6 +519,33 @@ def create_demo_world(seed: int = 42) -> World:
             5,
             f"{name} founded {settlement.name}.",
         )
+    # Give the first civilization a second holding so the representative world
+    # naturally exercises migration without player-only setup.
+    first_civ = world.civilizations["civilization-0001"]
+    second_settlement = Settlement(
+        world.entity_id("settlement"),
+        "Velar Crossing",
+        first_civ.id,
+        regions[1],
+        70,
+        45,
+    )
+    world.settlements[second_settlement.id] = second_settlement
+    first_civ.settlement_ids.append(second_settlement.id)
+    first_civ.population += second_settlement.population
+    second_resource = Resource(
+        world.entity_id("resource"), "grain", second_settlement.region_id, 90
+    )
+    world.resources[second_resource.id] = second_resource
+    world.emit(
+        "settlement_founded",
+        [first_civ.id, second_settlement.id],
+        second_settlement.id,
+        [],
+        {"population": second_settlement.population},
+        5,
+        f"Velar founded {second_settlement.name}.",
+    )
     ids = sorted(world.civilizations)
     for source, target in zip(ids, ids[1:] + ids[:1]):
         relation = Relationship(world.entity_id("relationship"), source, target, -35)
