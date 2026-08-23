@@ -17,7 +17,9 @@ class WorldSimulationTests(unittest.TestCase):
         self.assertEqual(len(first.regions), 7)
         self.assertEqual(len(first.civilizations), 4)
         self.assertTrue(all(region.neighbors for region in first.regions.values()))
-        self.assertTrue(all(resource.amount > 0 for resource in first.resources.values()))
+        self.assertTrue(
+            all(resource.amount > 0 for resource in first.resources.values())
+        )
         self.assertTrue(all(civ.population > 0 for civ in first.civilizations.values()))
         first.validate_generation()
         with self.assertRaises(ValidationError):
@@ -43,7 +45,9 @@ class WorldSimulationTests(unittest.TestCase):
         world.year = 18
         world._civilization_expansion(civ, Random("expansion"))
         self.assertGreaterEqual(len(civ.settlement_ids), 2)
-        self.assertTrue(any(event.type == "settlement_founded" for event in world.events))
+        self.assertTrue(
+            any(event.type == "settlement_founded" for event in world.events)
+        )
 
         for settlement_id in civ.settlement_ids:
             settlement = world.settlements[settlement_id]
@@ -52,7 +56,9 @@ class WorldSimulationTests(unittest.TestCase):
         civ.population = 0
         world.advance(1)
         self.assertEqual(civ.status, "collapsed")
-        self.assertTrue(any(event.type == "civilization_collapse" for event in world.events))
+        self.assertTrue(
+            any(event.type == "civilization_collapse" for event in world.events)
+        )
 
     def test_settlement_lifecycle_keeps_ruins_and_history(self) -> None:
         world = create_demo_world(24)
@@ -63,7 +69,10 @@ class WorldSimulationTests(unittest.TestCase):
         self.assertEqual(settlement.status, "ruins")
         self.assertEqual(settlement.ruin_year, world.year)
         self.assertEqual(settlement.population, 0)
-        self.assertIn(settlement.id, world.civilizations[settlement.civilization_id].settlement_ids)
+        self.assertIn(
+            settlement.id,
+            world.civilizations[settlement.civilization_id].settlement_ids,
+        )
 
     def test_historical_figures_have_lifecycle_and_legacy(self) -> None:
         world = create_demo_world(25)
@@ -104,7 +113,9 @@ class WorldSimulationTests(unittest.TestCase):
         relation.score = 40
         world.advance(17)
         religion = world.religions[world.civilizations[relation.source_id].religion_id]
-        self.assertGreater(religion.influence_by_civilization.get(relation.target_id, 0), 0)
+        self.assertGreater(
+            religion.influence_by_civilization.get(relation.target_id, 0), 0
+        )
         self.assertTrue(any(event.type == "belief_spread" for event in world.events))
 
         world.advance(9)
