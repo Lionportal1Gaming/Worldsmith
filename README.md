@@ -9,7 +9,7 @@ Infrastructure is established. The product brief is at Gate B: Concept; meaningf
 ## Working agreements
 
 - Roadmap and issues: [Linear project](https://linear.app/lionportal1/project/project-worldsmith-edf3ba572e8c)
-- Product decisions: [GitBook documentation space](https://app.gitbook.com/o/1GqExVOHS9RNozdwdymc/s/Uvdbk8sQPPjfLh2hCAtf/)
+- Product decisions: GitBook Project Worldsmith documentation space
 - Branches: `feature/LINEAR-ID-short-description`, `fix/LINEAR-ID-short-description`, `docs/LINEAR-ID-short-description`, or `chore/LINEAR-ID-short-description`
 - Commits: Conventional Commits, for example `feat(sim): add event ledger` or `docs: establish authority record`
 - Pull requests must link the Linear issue, describe tests, disclose save/data impact, and record accessibility impact.
