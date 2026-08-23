@@ -6,12 +6,10 @@ import json
 import os
 from pathlib import Path
 
+from .errors import SaveError
+from .logging import log_event, log_failure
 from .session import WorldSession
 from .simulation import World
-
-
-class SaveError(ValueError):
-    pass
 
 
 def save_world(world: World, path: Path) -> None:
@@ -26,12 +24,14 @@ def save_world(world: World, path: Path) -> None:
         handle.flush()
         os.fsync(handle.fileno())
     os.replace(temporary, path)
+    log_event("world_saved", path=path.name, year=world.year)
 
 
 def load_world(path: Path) -> World:
     try:
         return World.from_dict(json.loads(path.read_text(encoding="utf-8")))
     except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
+        log_failure("world_load_failed", path=path.name, error=type(error).__name__)
         raise SaveError(f"cannot load {path}: {error}") from error
 
 
@@ -48,10 +48,14 @@ def save_session(session: WorldSession, path: Path) -> None:
         handle.flush()
         os.fsync(handle.fileno())
     os.replace(temporary, path)
+    log_event("session_saved", path=path.name, timelines=len(session.timelines))
 
 
 def load_session(path: Path) -> WorldSession:
     try:
-        return WorldSession.from_dict(json.loads(path.read_text(encoding="utf-8")))
+        session = WorldSession.from_dict(json.loads(path.read_text(encoding="utf-8")))
+        log_event("session_loaded", path=path.name, timelines=len(session.timelines))
+        return session
     except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
+        log_failure("session_load_failed", path=path.name, error=type(error).__name__)
         raise SaveError(f"cannot recover session from {path}: {error}") from error

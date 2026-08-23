@@ -10,6 +10,8 @@ from dataclasses import asdict, dataclass, field
 from random import Random
 from typing import Any
 
+from .errors import NotFoundError, ValidationError
+
 SAVE_VERSION = 1
 
 
@@ -149,7 +151,7 @@ class World:
 
     def advance(self, years: int) -> None:
         if years < 0:
-            raise ValueError("years must be non-negative")
+            raise ValidationError("years must be non-negative")
         for _ in range(years):
             self.year += 1
             self._advance_year()
@@ -281,12 +283,14 @@ class World:
 
     def intervene(self, kind: str, target_id: str, magnitude: int = 10) -> Event:
         if target_id not in self.settlements and target_id not in self.civilizations:
-            raise ValueError("intervention target must be a settlement or civilization")
+            raise ValidationError(
+                "intervention target must be a settlement or civilization"
+            )
         target = self.settlements.get(target_id) or self.civilizations[target_id]
         interpretations: dict[str, str] = {}
         if kind == "create_resource":
             if not isinstance(target, Settlement):
-                raise ValueError("create_resource requires a settlement")
+                raise ValidationError("create_resource requires a settlement")
             target.resources += magnitude
             effect, truth = (
                 {"resources": magnitude},
@@ -294,7 +298,7 @@ class World:
             )
         elif kind == "bless":
             if not isinstance(target, Civilization):
-                raise ValueError("bless requires a civilization")
+                raise ValidationError("bless requires a civilization")
             target.stability = min(100, target.stability + magnitude)
             effect, truth = (
                 {"stability": magnitude},
@@ -302,7 +306,7 @@ class World:
             )
         elif kind == "curse":
             if not isinstance(target, Civilization):
-                raise ValueError("curse requires a civilization")
+                raise ValidationError("curse requires a civilization")
             target.stability = max(0, target.stability - magnitude)
             effect, truth = (
                 {"stability": -magnitude},
@@ -310,7 +314,7 @@ class World:
             )
         elif kind == "natural_disaster":
             if not isinstance(target, Settlement):
-                raise ValueError("natural_disaster requires a settlement")
+                raise ValidationError("natural_disaster requires a settlement")
             loss = min(target.population, magnitude)
             target.population -= loss
             effect, truth = (
@@ -319,14 +323,14 @@ class World:
             )
         elif kind == "miracle":
             if not isinstance(target, Settlement):
-                raise ValueError("miracle requires a settlement")
+                raise ValidationError("miracle requires a settlement")
             target.population += magnitude
             effect, truth = (
                 {"population_delta": magnitude},
                 "A divine miracle improved survival in the settlement.",
             )
         else:
-            raise ValueError("unknown intervention")
+            raise ValidationError("unknown intervention")
         civ_id = target.civilization_id if isinstance(target, Settlement) else target.id
         religion = self.civilizations[civ_id].religion_id
         interpretations[civ_id] = (
@@ -351,7 +355,7 @@ class World:
             (item for item in self.events if item.id == branch_point_event_id), None
         )
         if event is None:
-            raise KeyError(branch_point_event_id)
+            raise NotFoundError(branch_point_event_id)
         clone = World.from_dict(self.to_dict())
         clone.id = branch_id
         clone.timeline = Timeline(
@@ -431,10 +435,10 @@ class World:
     def _invariants(self) -> None:
         for civ in self.civilizations.values():
             if civ.population < 0 or civ.stability < 0 or civ.stability > 100:
-                raise AssertionError("invalid civilization state")
+                raise ValidationError("invalid civilization state")
         for settlement in self.settlements.values():
             if settlement.population < 0 or settlement.resources < 0:
-                raise AssertionError("invalid settlement state")
+                raise ValidationError("invalid settlement state")
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -458,7 +462,7 @@ class World:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> World:
         if data.get("version") != SAVE_VERSION:
-            raise ValueError("unsupported save version")
+            raise ValidationError("unsupported save version")
         world = cls(data["id"], data["seed"], data["name"])
         world.year, world.timeline, world._next = (
             data["year"],
