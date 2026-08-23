@@ -5,6 +5,7 @@ import time
 import unittest
 from pathlib import Path
 
+from worldsmith.benchmark import run_benchmark
 from worldsmith.cli import TerminalUI
 from worldsmith.persistence import SaveError, load_session, save_session
 from worldsmith.session import WorldSession
@@ -132,6 +133,23 @@ class VerticalSliceTests(unittest.TestCase):
         self.assertLess(elapsed, 2.0)
         self.assertLess(save_elapsed, 0.25)
         self.assertLess(load_elapsed, 0.25)
+
+    def test_benchmark_reports_every_gate_e_timing(self) -> None:
+        report = run_benchmark()
+
+        self.assertEqual(
+            set(report["milliseconds"]),
+            {
+                "world_generation",
+                "advance_1_year",
+                "advance_10_years",
+                "advance_100_years",
+                "timeline_branch",
+                "save",
+                "load",
+            },
+        )
+        self.assertTrue(all(value >= 0 for value in report["milliseconds"].values()))
 
 
 if __name__ == "__main__":
