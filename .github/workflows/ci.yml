@@ -20,4 +20,4 @@ jobs:
       - name: Unit, simulation, determinism, and save/load tests
         run: PYTHONPATH=src python -m unittest discover -s tests -v
       - name: Schema and data validation
-        run: PYTHONPATH=src python -c "from worldsmith.simulation import create_demo_world; assert create_demo_world().to_dict()['version'] == 1"
+        run: PYTHONPATH=src python -c "from worldsmith.simulation import SAVE_VERSION, create_demo_world; assert create_demo_world().to_dict()['version'] == SAVE_VERSION"
