@@ -19,7 +19,7 @@ class VerticalSliceTests(unittest.TestCase):
 
         self.assertEqual(session.settings.seed, 1234)
         self.assertEqual(session.settings.region_style, "lush")
-        self.assertEqual(len(session.active.regions), 3)
+        self.assertEqual(len(session.active.regions), 6)
         self.assertEqual(len(session.active.civilizations), 3)
 
     def test_end_to_end_branch_save_load_and_prime_comparison(self) -> None:
