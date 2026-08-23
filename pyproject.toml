@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 
 [project.scripts]
 worldsmith = "worldsmith.cli:run"
+worldsmith-benchmark = "worldsmith.benchmark:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
