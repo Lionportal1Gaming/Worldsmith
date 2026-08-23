@@ -5,8 +5,8 @@ import json
 import tempfile
 import time
 import unittest
-from pathlib import Path
 from copy import deepcopy
+from pathlib import Path
 
 from worldsmith.errors import SaveError, ValidationError
 from worldsmith.persistence import load_session, save_session
