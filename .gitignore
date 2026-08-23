@@ -1,0 +1,39 @@
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+secrets/
+credentials/
+
+# Local build, test, and coverage output
+dist/
+build/
+out/
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+
+# Logs and local save data
+*.log
+logs/
+saves/
+*.save
+*.bak
